@@ -1,7 +1,9 @@
 Abstract:
 The IKConnectionDelegate class simplifies your NSURLConnection-related code by using GCD and blocks. You just need to provide completion block and block that is executed during receiving data.
 See Demo App to get the idea.
+
 Install:
 Add contents of the IKConnectionDelegate to your project.
+
 License: 
 MIT License
