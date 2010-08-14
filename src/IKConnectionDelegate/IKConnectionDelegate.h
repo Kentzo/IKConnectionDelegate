@@ -1,3 +1,10 @@
+//
+//  IKConnectionDelegate.h
+//  IKConnectionDelegate
+//
+//  Created by Ilya Kulakov on 11.08.10.
+//  Copyright 2010. All rights reserved.
+
 #import <Foundation/Foundation.h>
 
 
