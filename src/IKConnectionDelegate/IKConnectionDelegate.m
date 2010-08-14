@@ -1,5 +1,5 @@
 //
-//  IKConnectionDelegate.h
+//  IKConnectionDelegate.m
 //  IKConnectionDelegate
 //
 //  Created by Ilya Kulakov on 11.08.10.
@@ -7,6 +7,7 @@
 
 #import <dispatch/dispatch.h>
 #import "IKConnectionDelegate.h"
+
 
 @interface IKConnectionDelegate (/* Private Stuff Here */)
 
