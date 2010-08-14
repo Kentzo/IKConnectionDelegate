@@ -16,6 +16,7 @@
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
 		28D7ACF80DDB3853001CB0EB /* IKConnectionDelegateViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 28D7ACF70DDB3853001CB0EB /* IKConnectionDelegateViewController.m */; };
 		E230D1BF12128AFB0018C5EC /* IKConnectionDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E230D1BE12128AFB0018C5EC /* IKConnectionDelegate.m */; };
+		E25FA5E41217006C0088ED83 /* IKConnectionDelegate-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E25FA5E31217006C0088ED83 /* IKConnectionDelegate-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,11 +30,11 @@
 		28AD733E0D9D9553002E5188 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = MainWindow.xib; path = "src/Demo App/MainWindow.xib"; sourceTree = "<group>"; };
 		28D7ACF60DDB3853001CB0EB /* IKConnectionDelegateViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IKConnectionDelegateViewController.h; sourceTree = "<group>"; };
 		28D7ACF70DDB3853001CB0EB /* IKConnectionDelegateViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IKConnectionDelegateViewController.m; sourceTree = "<group>"; };
-		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = "src/Demo App/main.m"; sourceTree = "<group>"; };
-		32CA4F630368D1EE00C91783 /* IKConnectionDelegate_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IKConnectionDelegate_Prefix.pch; path = "src/Demo App/IKConnectionDelegate_Prefix.pch"; sourceTree = "<group>"; };
-		8D1107310486CEB800E47090 /* IKConnectionDelegate-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "IKConnectionDelegate-Info.plist"; path = "src/Demo App/IKConnectionDelegate-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
+		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		32CA4F630368D1EE00C91783 /* IKConnectionDelegate_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IKConnectionDelegate_Prefix.pch; sourceTree = "<group>"; };
 		E230D1BD12128AFB0018C5EC /* IKConnectionDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IKConnectionDelegate.h; sourceTree = "<group>"; };
 		E230D1BE12128AFB0018C5EC /* IKConnectionDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IKConnectionDelegate.m; sourceTree = "<group>"; };
+		E25FA5E31217006C0088ED83 /* IKConnectionDelegate-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "IKConnectionDelegate-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,9 +94,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E25FA5E31217006C0088ED83 /* IKConnectionDelegate-Info.plist */,
 				2899E5210DE3E06400AC0155 /* IKConnectionDelegateViewController.xib */,
 				28AD733E0D9D9553002E5188 /* MainWindow.xib */,
-				8D1107310486CEB800E47090 /* IKConnectionDelegate-Info.plist */,
 			);
 			name = Resources;
 			path = ../..;
@@ -176,6 +177,7 @@
 			files = (
 				28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */,
 				2899E5220DE3E06400AC0155 /* IKConnectionDelegateViewController.xib in Resources */,
+				E25FA5E41217006C0088ED83 /* IKConnectionDelegate-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +231,7 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
