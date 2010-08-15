@@ -4,8 +4,6 @@
     UIImageView *imageView;
     UIProgressView *progressView;
     UILabel *label;
-@private 
-    IKConnectionDelegate *_delegate;
 }
 
 @property (nonatomic, retain) IBOutlet UIImageView *imageView;

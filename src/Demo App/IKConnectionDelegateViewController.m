@@ -19,9 +19,9 @@
     };
     
     IKConnectionCompletionBlock completion = ^(NSData *data, NSURLResponse *response, NSError *error) {
+        UIImage *image = [UIImage imageWithData:data];
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error == nil) {
-                UIImage *image = [UIImage imageWithData:data];
                 self.imageView.image = image;
                 
                 [UIView beginAnimations:nil context:NULL];
@@ -44,11 +44,9 @@
         });
     };
     
-    
-    _delegate = [[IKConnectionDelegate alloc] initWithProgressHandler:progressHandler completion:completion];
-    
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.motivatedsista.com/wp-content/uploads/2010/07/fear.bmp"]];
-    [NSURLConnection connectionWithRequest:request delegate:_delegate];
+    [NSURLConnection connectionWithRequest:request delegate:[IKConnectionDelegate connectionDelegateWithProgressHandler:progressHandler
+                                                                                                             completion:completion]];
 }
 
 
@@ -69,7 +67,6 @@
     [imageView release];
     [progressView release];
     [label release];
-    [_delegate release];
     [super dealloc];
 }
 
