@@ -50,12 +50,14 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
 
 /*
  @abstract Creates and returns an autoreleased IKConnectionDelegate object.
+ @discussion Copies given blocks.
  */
 + (IKConnectionDelegate *)connectionDelegateWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler 
                                                      completion:(IKConnectionCompletionBlock)aCompletion;
 
 /*
  @abstract Designated Initializer.
+ @discussion Copies given blocks.
  */
 - (IKConnectionDelegate *)initWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler
                                        completion:(IKConnectionCompletionBlock)aCompletion;
