@@ -68,7 +68,9 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)aData {
     [data appendData:aData];
-    progressHandler([data length], [response expectedContentLength]);
+    if (progressHandler != nil) {
+        progressHandler([data length], [response expectedContentLength]);
+    }
 }
 
 
@@ -86,12 +88,16 @@
 
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    completion(data, response, nil);
+    if (completion != nil) {
+        completion(data, response, nil);
+    }
 }
 
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)anError {
-    completion(data, response, anError);
+    if (completion != nil) {
+        completion(data, response, anError);
+    }
 }
 
 @end
