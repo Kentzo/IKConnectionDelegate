@@ -11,6 +11,9 @@
 
 @interface IKConnectionDelegate (/* Private Stuff Here */)
 
+@property (copy) IKConnectionProgressBlock downloadProgress;
+@property (copy) IKConnectionProgressBlock uploadProgress;
+@property (copy) IKConnectionCompletionBlock completion;
 @property (retain) NSMutableData *data;
 @property (retain) NSURLResponse *response;
 @property (retain) NSURLConnection *_connection;
@@ -18,24 +21,28 @@
 @end
 
 @implementation IKConnectionDelegate
-@synthesize progressHandler;
+@synthesize downloadProgress;
+@synthesize uploadProgress;
 @synthesize completion;
 @synthesize data;
 @synthesize response;
 @synthesize _connection;
 
-+ (IKConnectionDelegate *)connectionDelegateWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler
-                                                     completion:(IKConnectionCompletionBlock)aCompletion
++ (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                                  uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                                      completion:(IKConnectionCompletionBlock)aCompletion;
 {
-    return [[[self alloc] initWithProgressHandler:aProgressHandler completion:aCompletion] autorelease];
+    return [[[self alloc] initWithDownloadProgress:aDownloadProgress uploadProgress:anUploadProgress completion:aCompletion] autorelease];
 }
 
 
-- (IKConnectionDelegate *)initWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler 
-                                       completion:(IKConnectionCompletionBlock)aCompletion 
+- (IKConnectionDelegate *)initWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                    uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                        completion:(IKConnectionCompletionBlock)aCompletion
 {
     if (self = [super init]) {
-        self.progressHandler = aProgressHandler;
+        self.downloadProgress = aDownloadProgress;
+        self.uploadProgress = anUploadProgress;
         self.completion = aCompletion;
         data = [NSMutableData new];
     }
@@ -44,7 +51,8 @@
 
 
 - (void)dealloc {
-    [progressHandler release];
+    [downloadProgress release];
+    [uploadProgress release];
     [completion release];
     [data release];
     [response release];
@@ -68,8 +76,17 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)aData {
     [data appendData:aData];
-    if (progressHandler != nil) {
-        progressHandler([data length], [response expectedContentLength]);
+    if (downloadProgress != nil) {
+        downloadProgress([data length], [response expectedContentLength]);
+    }
+}
+
+
+- (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten 
+ totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
+{
+    if (uploadProgress != nil) {
+        uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
     }
 }
 

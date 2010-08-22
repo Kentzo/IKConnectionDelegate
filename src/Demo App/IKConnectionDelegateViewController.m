@@ -10,12 +10,17 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    IKConnectionProgressHandlerBlock progressHandler = ^(long long downloadedLength, long long maximumLength) {
+    IKConnectionProgressBlock downloadProgress = ^(NSUInteger downloadedLength, NSUInteger maximumLength) {
         float progress = ((float)downloadedLength)/maximumLength;
         dispatch_async(dispatch_get_main_queue(), ^{
             self.label.text = [NSString stringWithFormat:@"%.2f%%", progress * 100];
             self.progressView.progress = progress;
         });
+    };
+    
+    IKConnectionProgressBlock uploadProgress = ^(NSUInteger uploadedLength, NSUInteger maximumLength) {
+        float progress = ((float)uploadedLength)/maximumLength;
+        NSLog(@"%@", [NSString stringWithFormat:@"%.2f%%", progress * 100]);
     };
     
     IKConnectionCompletionBlock completion = ^(NSData *data, NSURLResponse *response, NSError *error) {
@@ -45,8 +50,9 @@
     };
     
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.motivatedsista.com/wp-content/uploads/2010/07/fear.bmp"]];
-    [NSURLConnection connectionWithRequest:request delegate:[IKConnectionDelegate connectionDelegateWithProgressHandler:progressHandler
-                                                                                                             completion:completion]];
+    [NSURLConnection connectionWithRequest:request delegate:[IKConnectionDelegate connectionDelegateWithDownloadProgress:downloadProgress
+                                                                                                          uploadProgress:uploadProgress
+                                                                                                              completion:completion]];
 }
 
 

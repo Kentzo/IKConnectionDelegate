@@ -9,10 +9,12 @@
 
 
 /*
- @param downloadedDataLength Length of data that is already downloaded.
- @param maximumLength The expected length of data. NSURLResponseUnknownLength if the length cannot be determined.
+ @param loadedDataLength Length of data that is already loaded.
+ @param maximumLength The expected length of data. 
+ @discussion For download progress can return NSURLResponseUnknownLength if the length cannot be determined. 
+ For upload progress maximumLength may change during the upload if the request needs to be retransmitted due to a lost connection or an authentication challenge from the server.
  */
-typedef void (^IKConnectionProgressHandlerBlock)(NSUInteger downloadedDataLength, NSUInteger maximumLength);
+typedef void (^IKConnectionProgressBlock)(NSUInteger loadedDataLength, NSUInteger maximumLength);
 
 /*
  @param data Downloaded data.
@@ -22,7 +24,8 @@ typedef void (^IKConnectionProgressHandlerBlock)(NSUInteger downloadedDataLength
 typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *response, NSError *error);
 
 @interface IKConnectionDelegate : NSObject {
-    IKConnectionProgressHandlerBlock progressHandler;
+    IKConnectionProgressBlock downloadProgress;
+    IKConnectionProgressBlock uploadProgress;
     IKConnectionCompletionBlock completion;
     dispatch_queue_t queue;
     NSMutableData *data;
@@ -32,13 +35,17 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
 }
 
 /*
- @abstract Executes a given block after connection loads data incrementally.
+ @abstract Executes a given block after connection downloads data incrementally.
  */
-@property (copy) IKConnectionProgressHandlerBlock progressHandler;
+@property (copy, readonly) IKConnectionProgressBlock downloadProgress;
+/*
+ @abstract Executes a given block after connection uploads data incrementally.
+ */
+@property (copy, readonly) IKConnectionProgressBlock uploadProgress;
 /*
  @abstract Executes a given block after connection has finished loading or failed to load its request successfully.
  */
-@property (copy) IKConnectionCompletionBlock completion;
+@property (copy, readonly) IKConnectionCompletionBlock completion;
 /*
  @abstract Data that connection is loaded.
  */
@@ -52,14 +59,16 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
  @abstract Creates and returns an autoreleased IKConnectionDelegate object.
  @discussion Copies given blocks.
  */
-+ (IKConnectionDelegate *)connectionDelegateWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler 
-                                                     completion:(IKConnectionCompletionBlock)aCompletion;
++ (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                                  uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                                      completion:(IKConnectionCompletionBlock)aCompletion;
 
 /*
  @abstract Designated Initializer.
  @discussion Copies given blocks.
  */
-- (IKConnectionDelegate *)initWithProgressHandler:(IKConnectionProgressHandlerBlock)aProgressHandler
-                                       completion:(IKConnectionCompletionBlock)aCompletion;
+- (IKConnectionDelegate *)initWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                    uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                        completion:(IKConnectionCompletionBlock)aCompletion;
 
 @end
