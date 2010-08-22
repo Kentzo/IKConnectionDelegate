@@ -48,7 +48,7 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
  */
 @property (copy, readonly) IKConnectionCompletionBlock completion;
 /*
- @abstract Data that connection is loaded.
+ @abstract Downloaded data.
  */
 @property (retain, readonly) NSMutableData *data;
 /*
@@ -62,6 +62,9 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
 
 /*
  @abstract Creates and returns an autoreleased IKConnectionDelegate object.
+ @param aDownloadProgress Executes a given block after connection downloads data incrementally.
+ @param anUploadProgress Executes a given block after connection uploads data incrementally.
+ @param aCompletion Executes a given block after connection has finished loading or failed to load its request successfully.
  @discussion Copies given blocks.
  */
 + (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
@@ -70,6 +73,9 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
 
 /*
  @abstract Designated Initializer.
+ @param aDownloadProgress Executes a given block after connection downloads data incrementally.
+ @param anUploadProgress Executes a given block after connection uploads data incrementally.
+ @param aCompletion Executes a given block after connection has finished loading or failed to load its request successfully.
  @discussion Copies given blocks.
  */
 - (IKConnectionDelegate *)initWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
