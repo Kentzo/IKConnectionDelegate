@@ -30,6 +30,7 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
     dispatch_queue_t queue;
     NSMutableData *data;
     NSURLResponse *response;
+    BOOL isFinished;
 @private
     NSURLConnection *_connection;
 }
@@ -54,6 +55,10 @@ typedef void (^IKConnectionCompletionBlock)(NSData *data, NSURLResponse *respons
  @abstract Response for the connection.
  */
 @property (retain, readonly) NSURLResponse *response;
+/*
+ @abstract Returns a Boolean value indicating whether the operation is done downloading/uploading. Observable.
+ */
+@property (assign, readonly) BOOL isFinished;
 
 /*
  @abstract Creates and returns an autoreleased IKConnectionDelegate object.

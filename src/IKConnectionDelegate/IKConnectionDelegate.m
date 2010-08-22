@@ -16,6 +16,7 @@
 @property (copy) IKConnectionCompletionBlock completion;
 @property (retain) NSMutableData *data;
 @property (retain) NSURLResponse *response;
+@property (assign) BOOL isFinished;
 @property (retain) NSURLConnection *_connection;
 
 @end
@@ -26,6 +27,7 @@
 @synthesize completion;
 @synthesize data;
 @synthesize response;
+@synthesize isFinished;
 @synthesize _connection;
 
 + (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
@@ -105,6 +107,7 @@
 
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    self.isFinished = YES;
     if (completion != nil) {
         completion(data, response, nil);
     }
@@ -112,6 +115,7 @@
 
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)anError {
+    self.isFinished = YES;
     if (completion != nil) {
         completion(data, response, anError);
     }
