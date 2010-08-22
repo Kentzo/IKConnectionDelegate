@@ -12,7 +12,7 @@
  @param downloadedDataLength Length of data that is already downloaded.
  @param maximumLength The expected length of data. NSURLResponseUnknownLength if the length cannot be determined.
  */
-typedef void (^IKConnectionProgressHandlerBlock)(long long downloadedDataLength, long long maximumLength);
+typedef void (^IKConnectionProgressHandlerBlock)(NSUInteger downloadedDataLength, NSUInteger maximumLength);
 
 /*
  @param data Downloaded data.
