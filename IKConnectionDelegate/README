@@ -1,0 +1,6 @@
+Abstract:
+The IKConnectionDelegate class removes NSURLConnection dance by using GCD and blocks. You just need to provide completion block and blocks to respond to the upload/download progress.
+See Demo App to get the idea (Look at the Downloads section).
+
+License: 
+MIT License
