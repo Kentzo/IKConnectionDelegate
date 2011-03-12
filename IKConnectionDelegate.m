@@ -9,11 +9,12 @@
 #import "IKConnectionDelegate.h"
 
 
-@interface IKConnectionDelegate (/* Private Stuff Here */)
+@interface IKConnectionDelegate (/* Private */)
 
 @property (copy) IKConnectionProgressBlock downloadProgress;
 @property (copy) IKConnectionProgressBlock uploadProgress;
 @property (copy) IKConnectionCompletionBlock completion;
+@property (copy) IKAuthenticationChallengerBlock challenger;
 @property (retain) NSMutableData *data;
 @property (retain) NSURLResponse *response;
 @property (assign) BOOL isFinished;
@@ -25,6 +26,7 @@
 @synthesize downloadProgress;
 @synthesize uploadProgress;
 @synthesize completion;
+@synthesize challenger;
 @synthesize data;
 @synthesize response;
 @synthesize isFinished;
@@ -32,20 +34,23 @@
 
 + (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
                                                   uploadProgress:(IKConnectionProgressBlock)anUploadProgress
-                                                      completion:(IKConnectionCompletionBlock)aCompletion;
+                                                      completion:(IKConnectionCompletionBlock)aCompletion
+                                                      challenger:(IKAuthenticationChallengerBlock)aChallenger
 {
-    return [[[self alloc] initWithDownloadProgress:aDownloadProgress uploadProgress:anUploadProgress completion:aCompletion] autorelease];
+    return [[[self alloc] initWithDownloadProgress:aDownloadProgress uploadProgress:anUploadProgress completion:aCompletion challenger:aChallenger] autorelease];
 }
 
 
 - (IKConnectionDelegate *)initWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
                                     uploadProgress:(IKConnectionProgressBlock)anUploadProgress
                                         completion:(IKConnectionCompletionBlock)aCompletion
+                                        challenger:(IKAuthenticationChallengerBlock)aChallenger
 {
     if (self = [super init]) {
         self.downloadProgress = aDownloadProgress;
         self.uploadProgress = anUploadProgress;
         self.completion = aCompletion;
+        self.challenger = aChallenger;
         data = [NSMutableData new];
     }
     return self;
@@ -56,6 +61,7 @@
     [downloadProgress release];
     [uploadProgress release];
     [completion release];
+    [challenger release];
     [data release];
     [response release];
     [super dealloc];
@@ -65,8 +71,7 @@
 #pragma mark NSURLConnection delegate methods
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)aResponse {
-    
-    NSAssert(_connection == nil || _connection == connection, @"You cannot use one IKConnectionDelegate more than once");
+    NSAssert(_connection == nil || _connection == connection, @"You cannot use an IKConnectionDelegate instance more than once");
     
     if (_connection == nil) {
         _connection = connection;
@@ -84,8 +89,10 @@
 }
 
 
-- (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten 
- totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
+- (void)connection:(NSURLConnection *)connection
+   didSendBodyData:(NSInteger)bytesWritten 
+ totalBytesWritten:(NSInteger)totalBytesWritten
+totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 {
     if (uploadProgress != nil) {
         uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
@@ -94,15 +101,19 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
+    NSAssert(_connection == nil || _connection == connection, @"You cannot use an IKConnectionDelegate instance more than once");
     
-    NSAssert(_connection == nil || _connection == connection, @"You cannot use one IKConnectionDelegate more than once");
-    
-	if ([challenge previousFailureCount] > 0) {
-		[[challenge sender] cancelAuthenticationChallenge:challenge];
-	}
-	else {
-		[[challenge sender] useCredential:[challenge proposedCredential] forAuthenticationChallenge:challenge];
-	}
+    if (challenger != nil) {
+        challenger(connection, challenge);
+    }
+    else {
+        if ([challenge previousFailureCount] > 0) {
+            [[challenge sender] cancelAuthenticationChallenge:challenge];
+        }
+        else {
+            [[challenge sender] useCredential:[challenge proposedCredential] forAuthenticationChallenge:challenge];
+        }
+    }
 }
 
 
