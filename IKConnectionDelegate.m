@@ -5,7 +5,6 @@
 //  Created by Ilya Kulakov on 11.08.10.
 //  Copyright 2010. All rights reserved.
 
-#import <dispatch/dispatch.h>
 #import "IKConnectionDelegate.h"
 
 
@@ -36,8 +35,52 @@
                                                   uploadProgress:(IKConnectionProgressBlock)anUploadProgress
                                                       completion:(IKConnectionCompletionBlock)aCompletion
                                                       challenger:(IKAuthenticationChallengerBlock)aChallenger
+                                                           group:(dispatch_group_t)aGroup
+                                                      groupQueue:(dispatch_queue_t)aGroupQueue
 {
-    return [[[self alloc] initWithDownloadProgress:aDownloadProgress uploadProgress:anUploadProgress completion:aCompletion challenger:aChallenger] autorelease];
+    return [[[self alloc] initWithDownloadProgress:aDownloadProgress uploadProgress:anUploadProgress completion:aCompletion challenger:aChallenger group:aGroup groupQueue:aGroupQueue] autorelease];
+}
+
+
++ (IKConnectionDelegate *)connectionDelegateWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                                  uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                                      completion:(IKConnectionCompletionBlock)aCompletion
+                                                      challenger:(IKAuthenticationChallengerBlock)aChallenger
+{
+    return [self connectionDelegateWithDownloadProgress:aDownloadProgress
+                                         uploadProgress:anUploadProgress
+                                             completion:aCompletion
+                                             challenger:aChallenger
+                                                  group:NULL
+                                             groupQueue:NULL];
+}
+
+
+- (IKConnectionDelegate *)initWithDownloadProgress:(IKConnectionProgressBlock)aDownloadProgress
+                                    uploadProgress:(IKConnectionProgressBlock)anUploadProgress
+                                        completion:(IKConnectionCompletionBlock)aCompletion
+                                        challenger:(IKAuthenticationChallengerBlock)aChallenger
+                                             group:(dispatch_group_t)aGroup
+                                        groupQueue:(dispatch_queue_t)aGroupQueue
+{
+    if ((self = [super init])) {
+        self.downloadProgress = aDownloadProgress;
+        self.uploadProgress = anUploadProgress;
+        self.completion = aCompletion;
+        self.challenger = aChallenger;
+        _group = aGroup;
+        if (_group != NULL) {
+            dispatch_retain(_group);
+            dispatch_group_enter(_group);
+            _groupQueue = aGroupQueue;
+            if (_groupQueue == NULL) {
+                _groupQueue = dispatch_get_main_queue();
+            }
+            dispatch_retain(_groupQueue);
+        }
+        data = [NSMutableData new];
+    }
+    return self;
 }
 
 
@@ -46,14 +89,12 @@
                                         completion:(IKConnectionCompletionBlock)aCompletion
                                         challenger:(IKAuthenticationChallengerBlock)aChallenger
 {
-    if ((self = [super init])) {
-        self.downloadProgress = aDownloadProgress;
-        self.uploadProgress = anUploadProgress;
-        self.completion = aCompletion;
-        self.challenger = aChallenger;
-        data = [NSMutableData new];
-    }
-    return self;
+    return [self initWithDownloadProgress:aDownloadProgress
+                           uploadProgress:anUploadProgress
+                               completion:aCompletion
+                               challenger:aChallenger
+                                    group:NULL
+                               groupQueue:NULL];
 }
 
 
@@ -64,6 +105,11 @@
     [challenger release];
     [data release];
     [response release];
+    if (_group != NULL) {
+        dispatch_group_leave(_group);
+        dispatch_release(_group);
+        dispatch_release(_groupQueue);
+    }
     [super dealloc];
 }
 
@@ -84,7 +130,14 @@
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)aData {
     [data appendData:aData];
     if (downloadProgress != nil) {
-        downloadProgress([data length], [response expectedContentLength]);
+        if (_group != NULL) {
+            dispatch_group_async(_group, _groupQueue, ^{
+                downloadProgress([data length], [response expectedContentLength]);
+            });
+        }
+        else {
+            downloadProgress([data length], [response expectedContentLength]);
+        }
     }
 }
 
@@ -95,7 +148,14 @@
 totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 {
     if (uploadProgress != nil) {
-        uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
+        if (_group != NULL) {
+            dispatch_group_async(_group, _groupQueue, ^{
+                uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
+            });
+        }
+        else {
+            uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
+        }
     }
 }
 
@@ -104,7 +164,14 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
     NSAssert(_connection == nil || _connection == connection, @"You cannot use an IKConnectionDelegate instance more than once");
     
     if (challenger != nil) {
-        challenger(connection, challenge);
+        if (_group != NULL) {
+            dispatch_group_async(_group, _groupQueue, ^{
+                challenger(connection, challenge);
+            });
+        }
+        else {
+            challenger(connection, challenge);
+        }
     }
     else {
         if ([challenge previousFailureCount] > 0) {
@@ -120,7 +187,14 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     self.isFinished = YES;
     if (completion != nil) {
-        completion(data, response, nil);
+        if (_group != NULL) {
+            dispatch_group_async(_group, _groupQueue, ^{
+                completion(data, response, nil);
+            });
+        }
+        else {
+            completion(data, response, nil);
+        }
     }
 }
 
@@ -128,7 +202,14 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)anError {
     self.isFinished = YES;
     if (completion != nil) {
-        completion(data, response, anError);
+        if (_group != NULL) {
+            dispatch_group_async(_group, _groupQueue, ^{
+                completion(data, response, anError);
+            });
+        }
+        else {
+            completion(data, response, anError);
+        }
     }
 }
 
