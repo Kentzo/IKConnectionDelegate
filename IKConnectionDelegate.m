@@ -46,7 +46,7 @@
                                         completion:(IKConnectionCompletionBlock)aCompletion
                                         challenger:(IKAuthenticationChallengerBlock)aChallenger
 {
-    if (self = [super init]) {
+    if ((self = [super init])) {
         self.downloadProgress = aDownloadProgress;
         self.uploadProgress = anUploadProgress;
         self.completion = aCompletion;
