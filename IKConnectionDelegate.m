@@ -19,6 +19,13 @@
 @property (assign) BOOL isFinished;
 @property (retain) NSURLConnection *_connection;
 
+- (void)_doActionWithConnection:(NSURLConnection *)aConnection;
+
+/*!
+ @result YES if current execution should be interrupted. Otherwise NO.
+ */
+- (BOOL)_shouldBreak;
+
 @end
 
 @implementation IKConnectionDelegate
@@ -77,6 +84,7 @@
                 _groupQueue = dispatch_get_main_queue();
             }
             dispatch_retain(_groupQueue);
+            dispatch_set_context(_group, (void *)IKNoneGroupAction);
         }
         data = [NSMutableData new];
     }
@@ -116,23 +124,43 @@
 
 #pragma mark NSURLConnection delegate methods
 
+- (NSURLRequest *)connection:(NSURLConnection *)connection willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)redirectResponse {
+    [self _doActionWithConnection:connection];
+    if (![self _shouldBreak]) {
+        return request;
+    }
+    else {
+        return nil;
+    }
+}
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)aResponse {
     NSAssert(_connection == nil || _connection == connection, @"You cannot use an IKConnectionDelegate instance more than once");
-    
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     if (_connection == nil) {
         _connection = connection;
     }
-    
+
     self.response = aResponse;
 }
 
-
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)aData {
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     [data appendData:aData];
     if (downloadProgress != nil) {
         if (_group != NULL) {
             dispatch_group_async(_group, _groupQueue, ^{
-                downloadProgress([data length], [response expectedContentLength]);
+                if (![self _shouldBreak]) {
+                    downloadProgress([data length], [response expectedContentLength]);
+                }
             });
         }
         else {
@@ -143,14 +171,21 @@
 
 
 - (void)connection:(NSURLConnection *)connection
-   didSendBodyData:(NSInteger)bytesWritten 
+   didSendBodyData:(NSInteger)bytesWritten
  totalBytesWritten:(NSInteger)totalBytesWritten
 totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 {
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     if (uploadProgress != nil) {
         if (_group != NULL) {
             dispatch_group_async(_group, _groupQueue, ^{
-                uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
+                if (![self _shouldBreak]) {
+                    uploadProgress(totalBytesWritten, totalBytesExpectedToWrite);
+                }
             });
         }
         else {
@@ -162,11 +197,17 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 
 - (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
     NSAssert(_connection == nil || _connection == connection, @"You cannot use an IKConnectionDelegate instance more than once");
-    
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     if (challenger != nil) {
         if (_group != NULL) {
             dispatch_group_async(_group, _groupQueue, ^{
-                challenger(connection, challenge);
+                if (![self _shouldBreak]) {
+                    challenger(connection, challenge);
+                }
             });
         }
         else {
@@ -183,13 +224,19 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
     }
 }
 
-
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     self.isFinished = YES;
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     if (completion != nil) {
         if (_group != NULL) {
             dispatch_group_async(_group, _groupQueue, ^{
-                completion(data, response, nil);
+                if (![self _shouldBreak]) {
+                    completion(data, response, nil);
+                }
             });
         }
         else {
@@ -198,18 +245,82 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
     }
 }
 
-
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)anError {
     self.isFinished = YES;
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return;
+    }
+
     if (completion != nil) {
         if (_group != NULL) {
             dispatch_group_async(_group, _groupQueue, ^{
-                completion(data, response, anError);
+                if (![self _shouldBreak]) {
+                    completion(data, response, anError);
+                }
             });
         }
         else {
             completion(data, response, anError);
         }
+    }
+}
+
+- (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {
+    [self _doActionWithConnection:connection];
+    if ([self _shouldBreak]) {
+        return nil;
+    }
+
+    return cachedResponse;
+}
+
++ (void)setAction:(IKConnectionDelegateGroupAction)aGroupAction forGroup:(dispatch_group_t)aGroup {
+    NSAssert(aGroup != NULL, @"You must set group to be able to call this method");
+    NSAssert(dispatch_get_context(aGroup) == NULL || (IKConnectionDelegateGroupAction)dispatch_get_context(aGroup) == aGroupAction, @"You cannot set more than one action for a group");
+    dispatch_set_context(aGroup, (void *)aGroupAction);
+}
+
++ (IKConnectionDelegateGroupAction)actionForGroup:(dispatch_group_t)aGroup {
+    int action = (int)dispatch_get_context(aGroup);
+    switch (action) {
+        case IKNoneGroupAction:
+            return IKNoneGroupAction;
+        case IKCancelGroupAction:
+            return IKCancelGroupAction;
+        default:
+            return IKUndefinedAction;
+    }
+}
+
+- (void)_doActionWithConnection:(NSURLConnection *)aConnection {
+    if (_group != NULL) {
+        IKConnectionDelegateGroupAction action = (IKConnectionDelegateGroupAction)dispatch_get_context(_group);
+        switch (action) {
+            case IKNoneGroupAction:
+                break;
+            case IKCancelGroupAction:
+                [aConnection cancel];
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+- (BOOL)_shouldBreak {
+    if (_group != NULL) {
+        IKConnectionDelegateGroupAction action = [IKConnectionDelegate actionForGroup:_group];
+        switch (action) {
+            case IKNoneGroupAction:
+            case IKUndefinedAction:
+                return NO;
+            case IKCancelGroupAction:
+                return YES;
+        }
+    }
+    else {
+        return NO;
     }
 }
 

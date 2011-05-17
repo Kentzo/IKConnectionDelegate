@@ -9,13 +9,20 @@
 #import <dispatch/dispatch.h>
 
 
+typedef enum {
+    IKNoneGroupAction = 0,
+    IKCancelGroupAction = 0x1,
+    IKUndefinedAction = 0xFFFFFFFF
+} IKConnectionDelegateGroupAction;
+
+
 /*!
  @param loadedDataLength    Length of data which is already loaded.
  @param maximumLength       The expected length of data.
  @discussion                For download progress can return NSURLResponseUnknownLength if the length cannot be determined.
                             For upload progress maximumLength may change during the upload if the request needs to be retransmitted due to a lost connection or an authentication challenge from the server.
  */
-typedef void (^IKConnectionProgressBlock)(NSUInteger loadedDataLength, NSUInteger maximumLength);
+typedef void (^IKConnectionProgressBlock)(NSUInteger loadedDataLength, long long maximumLength);
 
 /*!
  @param data        Downloaded data.
@@ -147,5 +154,15 @@ typedef void (^IKAuthenticationChallengerBlock)(NSURLConnection *connection, NSU
                                     uploadProgress:(IKConnectionProgressBlock)anUploadProgress
                                         completion:(IKConnectionCompletionBlock)aCompletion
                                         challenger:(IKAuthenticationChallengerBlock)aChallenger;
+/*!
+ @abstract      Makes all IKConnectionDelegate instances that belong to a given group do a given action.
+ @discussions   Do an action only when one of the NSURLConnection delegate methods is called. You can set only one action for a group. Action is essentially a context of a group.
+ */
++ (void)setAction:(IKConnectionDelegateGroupAction)aGroupAction forGroup:(dispatch_group_t)aGroup;
+
+/*!
+ @abstract  Returns current action for a given group
+ */
++ (IKConnectionDelegateGroupAction)actionForGroup:(dispatch_group_t)aGroup;
 
 @end
